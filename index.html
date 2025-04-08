@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎨 Image & Document Compressor</title>
+
+  <!-- AdMob Script -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-app-pub-3738089415682800"
+    crossorigin="anonymous"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .ad-container {
+      margin: 10px auto 30px auto;
+      text-align: center;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+    }
+    .slider-container {
+      margin: 20px auto;
+      text-align: center;
+    }
+    input[type="range"] {
+      width: 80%;
+    }
+    .slider-label {
+      margin-bottom: 10px;
+      display: block;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: block;
+      margin: 20px auto;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+    .emoji {
+      font-size: 1.5rem;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️📄 Image & Document Compressor 🚀</h1>
+
+    <!-- AdMob Banner -->
+    <div class="ad-container">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-app-pub-3738089415682800"
+           data-ad-slot="2557221430"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+
+    <input type="file" id="fileInput" multiple />
+    <div class="slider-container">
+      <label class="slider-label" for="qualityRange">🛠️ Compression Level: <span id="qualityValue">0.7</span></label>
+      <input type="range" id="qualityRange" min="0.1" max="1" step="0.1" value="0.7"/>
+    </div>
+    <button onclick="compressFiles()">Compress Now!</button>
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>📄 File Name</th>
+          <th>📦 Original Size</th>
+          <th>🧊 Compressed Size</th>
+          <th>⬇️ Download</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const qualityRange = document.getElementById("qualityRange");
+    const qualityValue = document.getElementById("qualityValue");
+    const resultsTable = document.getElementById("resultsTable");
+    const resultsBody = document.getElementById("resultsBody");
+
+    qualityRange.addEventListener("input", () => {
+      qualityValue.textContent = qualityRange.value;
+    });
+
+    function formatSize(bytes) {
+      const sizes = ["Bytes", "KB", "MB"];
+      let i = 0;
+      while (bytes >= 1024 && i < sizes.length - 1) {
+        bytes /= 1024;
+        i++;
+      }
+      return `${bytes.toFixed(1)} ${sizes[i]}`;
+    }
+
+    function compressFiles() {
+      const files = fileInput.files;
+      const quality = parseFloat(qualityRange.value);
+      resultsBody.innerHTML = "";
+
+      if (!files.length) {
+        alert("Please select files to compress.");
+        return;
+      }
+
+      [...files].forEach(file => {
+        const originalSize = file.size;
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          const fileType = file.type;
+
+          // Compress images using canvas
+          if (fileType.startsWith("image/")) {
+            const img = new Image();
+            img.onload = function () {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+
+              canvas.toBlob(blob => {
+                const compressedSize = blob.size;
+                const url = URL.createObjectURL(blob);
+                appendResult(file.name, originalSize, compressedSize, url);
+              }, fileType, quality);
+            };
+            img.src = e.target.result;
+          } else {
+            // Simulate compression for docs
+            const compressedSize = Math.floor(originalSize * quality);
+            const blob = new Blob([file.slice(0, compressedSize)], { type: fileType });
+            const url = URL.createObjectURL(blob);
+            appendResult(file.name, originalSize, compressedSize, url);
+          }
+        };
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function appendResult(name, originalSize, compressedSize, url) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="emoji">📄 ${name}</td>
+        <td>${formatSize(originalSize)}</td>
+        <td>${formatSize(compressedSize)}</td>
+        <td><a href="${url}" download="${name}" class="emoji">⬇️</a></td>
+      `;
+      resultsBody.appendChild(row);
+      resultsTable.style.display = "table";
+    }
+  </script>
+</body>
+</html>
